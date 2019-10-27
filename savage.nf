@@ -4,3 +4,9 @@
 # savage --split patch_num --min_overlap_len M --s singles.fastq --p1 paired1.fastq --p2 paired2.fastq
 # add: -ref to run in reference guided mode
 
+# TODO:
+# * calculate coverage for each sample and feed it into savage --split argument
+# * create a list of files in a directory or make the script operate directly on the files
+#
+# ---------------------
+#
