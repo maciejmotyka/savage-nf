@@ -1,3 +1,7 @@
 work
 .nextflow
 .nextflow.log
+*.swp
+.nextflow.log*
+*clean.fastq
+*log.html*

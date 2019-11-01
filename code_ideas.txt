@@ -1,0 +1,95 @@
+# Groovy
+
+myFile = file('some/path/to/my_file.file')
+
+listOfFiles = file('some/path/*.fa')
+
+"""
+file()
+* Two asterisks (**) in a glob pattern works like * but matches any number of directory components in a file system path.
+* glob - When true interprets characters *, ?, [] and {} as glob wildcards, otherwise handles them as normal characters (default: true)
+* checkIfExists - When true throws an exception of the specified path do not exist in the file system (default: false)
+* maxDepth - Maximum number of directory levels to visit (default: no limit)
+"""
+
+# print contents of a file read as string
+print myFile.text
+
+# write string to a file; will create; will overwrite
+myFile.text = 'Hello world!'
+
+# won't overwrite
+myFile.append('Add this line\n')
+myFile << 'Add this line\n'
+
+# read line by line
+allLines = myFile.readLines()
+
+#print line by line
+allLines
+    .readLines()
+    .each { println it }
+# The method readLines() reads all the file content at once and returns a list containing all the lines. For this reason, do not use it to read big files. To process a big file, use the method eachLine, which reads only a single line at a time into memory
+
+# getText	Returns the file content as a string value
+readLines	Reads the file line by line and returns the content as a list of strings
+eachLine	Iterates over the file line by line, applying the specified closure
+withReader	Opens a file for reading and lets you access it with a Reader object
+
+setText	Writes a string value to a file
+write	Writes a string to a file, replacing any existing content
+append	Appends a string value to a file without replacing existing contentwith
+Writer	Applies the specified closure to a Writer object, closing it when finished 
+withPrintWriter	Applies the specified closure to a PrintWriter object, closing it when finished
+
+# The simplest way to get a directory list is by using the methods list or listFiles, which return a collection of first-level elements (files and directories) of a directory:
+allFiles = myDir.list()
+allFiles = myDir.listFiles()
+# The only difference between list and listFiles is that the former returns a list of strings, and the latter a list of file objects that allow you to access file metadata, e.g. size, last modified time, etc.
+
+# The eachFile method allows you to iterate through the first-level elements only (just like listFiles).
+myDir.eachFile { item ->
+    if( item.isFile() ) {
+        println "${item.getName()} - size: ${item.size()}"
+    }
+    else if( item.isDirectory() ) {
+        println "${item.getName()} - DIR"
+    }
+}
+"""
+eachFile	Iterates through first-level elements (files and directories).
+eachDir	Iterates through first-level directories only.
+eachFileMatch	Iterates through files and dirs whose names match the given filter.
+eachDirMatch	Iterates through directories whose names match the given filter.
+eachFileRecurse	Iterates through directory elements depth-first.
+eachDirRecurse	Iterates through directories depth-first (regular files are ignored).
+"""
+myFile.copyTo('new_name.txt')
+myFile.moveTo('/another/path/new_file.txt')
+myDir.moveTo('/any/dir_b')
+myFile.renameTo('new_file_name.txt')
+result = myFile.delete()
+println result ? "OK" : "Can't delete: $myFile"
+# This method deletes a directory ONLY if it does not contain any files or sub-directories. To delete a directory and ALL its content (i.e. removing all the files and sub-directories it may contain), use the method deleteDir.
+
+process < name > {
+
+   [ directives ]
+
+   input:
+    < process inputs >
+
+   output:
+    < process outputs >
+
+   when:
+    < condition >
+
+   [script|shell|exec]:
+   < user script to be executed >
+
+}
+
+#!/usr/bin/env R
+#!/usr/bin/env python
+
