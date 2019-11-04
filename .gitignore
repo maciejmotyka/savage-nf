@@ -5,3 +5,4 @@ work
 .nextflow.log*
 *clean.fastq
 *log.html*
+split_into.txt
