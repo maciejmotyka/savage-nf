@@ -39,10 +39,10 @@ def main():
 
     split_into = calculate_split(total_seq_len, args.ref_len)
     filename = args.input_p1
-
-    outfile = open("split_into.txt", "a+")
-    outfile.write("%s\t%s\n" % (filename, split_into))
-    outfile.close()
+    print split_into
+#    outfile = open("split_into.txt", "a+")
+#    outfile.write("%s\t%s\n" % (filename, split_into))
+#    outfile.close()
 
 def calculate_split(num_of_bases, ref_len):
     split_into = 1

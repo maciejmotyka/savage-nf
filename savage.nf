@@ -6,74 +6,44 @@
 
 /*
 TODO:
-* calculate coverage for each sample and feed it into savage --split argument
-* create a list of files in a directory or make the script operate directly on the files
 */
+
 // ---------------------
-//params.calc_split = True
-params.mode = "denovo"   
-params.savage_env = "/opt/anaconda2/envs/savage"
-//params.reads_dir = "/home/lejno/Desktop/WDV/reads_BBDukTrimmed/fastq"
-reads_dir = "/home/lejno/Desktop/nextflow"
-params.split = 3 // 3 for sample 10; 2 for sample 11
-//params.min_overlap_len =
-params.revcomp = "--revcomp"
-params.num_threads = 8
-//params.overlap_len_stage_c = 100
-//params.merge_contigs = 0
-params.ref = "/home/lejno/Desktop/WDV/WDV_RefSeq.fasta"
-//params.out_dir = "/home/lejno/Desktop/nextflow/output" 
-params.out_dir = "."
-params.ref_len = "2750"
 
 mode = params.mode 
-Channel.fromFilePairs("$reads_dir/*_R{1,2}_clean.fastq").into { samples_ch1; samples_ch2 }
-//samples_ch = Channel.fromFilePairs("$reads_dir/*_R{1,2}_clean.fastq")
-//    .set { samples_ch }
-
-process calculateSplitParameter {
-    input:
-    set sampleId, file(reads) from samples_ch1 
-
-    output:
-    path 'split_into.txt' into splits_ch
-//    when: params.calc_split == True
-    
-    script:
-    """
-   calculate_split.py \
-    --ref_len $params.ref_len \
-    -p1 ${reads[0]} \
-    -p2 ${reads[1]} \
-    """
-    }
+samples_ch = Channel.fromFilePairs("$params.reads_dir/*_R{1,2}_clean.fastq")
 
 process doAssembly {
     conda params.savage_env
     input:
-    set sampleId, file(reads) from samples_ch2
-    set val(sample_name), val(split_value) from splits_ch
+    set sampleId, file(reads) from samples_ch
 
     script: 
     if( mode == 'ref' ) {
-
     """
+    SPLIT_VAL="\$(calculate_split.py \
+    --ref_len $params.ref_len \
+    -p1 ${reads[0]} \
+    -p2 ${reads[1]})";\
     savage \
 	--ref $ref
     -t $params.num_threads \
-    --split $params.split \
+    --split "\$SPLIT_VAL" \
     $params.revcomp\
     -p1 ${reads[0]} \
     -p2 ${reads[1]} \
-	-o $params.out_dir
+    -o $params.out_dir
 	"""
     }
     else if( mode == 'denovo') {
-
-	"""
+    """
+    SPLIT_VAL="\$(calculate_split.py \
+    --ref_len $params.ref_len \
+    -p1 ${reads[0]} \
+    -p2 ${reads[1]})";\
     savage \
     -t $params.num_threads \
-    --split $params.split \
+    --split "\$SPLIT_VAL" \
     $params.revcomp\
     -p1 ${reads[0]} \
     -p2 ${reads[1]} \
@@ -83,9 +53,4 @@ process doAssembly {
     else {
         println "Select proper mode"
     }
-}
-
-workflow.onComplete {
-    println "Pipeline completed at: $workflow.complete"
-    println "Execution status: ${ workflow.success ? 'OK' : 'failed' }"
 }
