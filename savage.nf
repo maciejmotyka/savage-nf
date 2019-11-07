@@ -41,7 +41,7 @@ process calculateSplitParameter {
     
     script:
     """
-   /home/lejno/Desktop/nextflow/calculate_split.py \
+   calculate_split.py \
     --ref_len $params.ref_len \
     -p1 ${reads[0]} \
     -p2 ${reads[1]} \
