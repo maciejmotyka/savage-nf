@@ -10,7 +10,8 @@ TODO:
 * create a list of files in a directory or make the script operate directly on the files
 */
 // ---------------------
-mode = "denovo"   
+//params.calc_split = True
+params.mode = "denovo"   
 params.savage_env = "/opt/anaconda2/envs/savage"
 //params.reads_dir = "/home/lejno/Desktop/WDV/reads_BBDukTrimmed/fastq"
 reads_dir = "/home/lejno/Desktop/nextflow"
@@ -23,40 +24,61 @@ params.num_threads = 8
 params.ref = "/home/lejno/Desktop/WDV/WDV_RefSeq.fasta"
 //params.out_dir = "/home/lejno/Desktop/nextflow/output" 
 params.out_dir = "."
+params.ref_len = "2750"
 
-samples_ch = Channel.fromFilePairs("$reads_dir/*_R{1,2}_clean.fastq")
+mode = params.mode 
+Channel.fromFilePairs("$reads_dir/*_R{1,2}_clean.fastq").into { samples_ch1; samples_ch2 }
+//samples_ch = Channel.fromFilePairs("$reads_dir/*_R{1,2}_clean.fastq")
 //    .set { samples_ch }
+
+process calculateSplitParameter {
+    input:
+    set sampleId, file(reads) from samples_ch1 
+
+    output:
+    path 'split_into.txt' into splits_ch
+//    when: params.calc_split == True
+    
+    script:
+    """
+   /home/lejno/Desktop/nextflow/calculate_split.py \
+    --ref_len $params.ref_len \
+    -p1 ${reads[0]} \
+    -p2 ${reads[1]} \
+    """
+    }
 
 process doAssembly {
     conda params.savage_env
     input:
-    set sampleId, file(reads) from samples_ch 
+    set sampleId, file(reads) from samples_ch2
+    set val(sample_name), val(split_value) from splits_ch
 
     script: 
     if( mode == 'ref' ) {
 
-    	"""
-    	savage \
+    """
+    savage \
 	--ref $ref
-    	-t $params.num_threads \
-    	--split $params.split \
-        $params.revcomp\
-    	-p1 ${reads[0]} \
-    	-p2 ${reads[1]} \
+    -t $params.num_threads \
+    --split $params.split \
+    $params.revcomp\
+    -p1 ${reads[0]} \
+    -p2 ${reads[1]} \
 	-o $params.out_dir
 	"""
     }
     else if( mode == 'denovo') {
 
 	"""
-        savage \
-        -t $params.num_threads \
-        --split $params.split \
-        $params.revcomp\
-        -p1 ${reads[0]} \
-        -p2 ${reads[1]} \
-        -o $params.out_dir
-        """
+    savage \
+    -t $params.num_threads \
+    --split $params.split \
+    $params.revcomp\
+    -p1 ${reads[0]} \
+    -p2 ${reads[1]} \
+    -o $params.out_dir
+    """
     }
     else {
         println "Select proper mode"
