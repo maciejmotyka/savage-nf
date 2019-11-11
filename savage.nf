@@ -6,64 +6,53 @@
 
 /*
 TODO:
-* calculate coverage for each sample and feed it into savage --split argument
-* create a list of files in a directory or make the script operate directly on the files
 */
-// ---------------------
-mode = "denovo"   
-params.savage_env = "/opt/anaconda2/envs/savage"
-//params.reads_dir = "/home/lejno/Desktop/WDV/reads_BBDukTrimmed/fastq"
-reads_dir = "/home/lejno/Desktop/nextflow"
-params.split = 3 // 3 for sample 10; 2 for sample 11
-//params.min_overlap_len =
-params.revcomp = "--revcomp"
-params.num_threads = 8
-//params.overlap_len_stage_c = 100
-//params.merge_contigs = 0
-params.ref = "/home/lejno/Desktop/WDV/WDV_RefSeq.fasta"
-//params.out_dir = "/home/lejno/Desktop/nextflow/output" 
-params.out_dir = "."
 
-samples_ch = Channel.fromFilePairs("$reads_dir/*_R{1,2}_clean.fastq")
-//    .set { samples_ch }
+// ---------------------
+mode = params.mode 
+samples_ch = Channel.fromFilePairs("$params.reads_dir/*_R{1,2}_clean.fastq")
 
 process doAssembly {
+//    publishDir "./output/$sampleId", mode: 'copy', pattern: "{contigs_stage_c.fasta,contigs_stage_b.fasta}"
+    publishDir "./savage_contigs", pattern: "contigs_stage_c.fasta", saveAs: {"$sampleId" + ".fasta"}
     conda params.savage_env
     input:
-    set sampleId, file(reads) from samples_ch 
-
+    set sampleId, file(reads) from samples_ch
+    output:
+    file "*"
     script: 
     if( mode == 'ref' ) {
-
-    	"""
-    	savage \
-	--ref $ref
-    	-t $params.num_threads \
-    	--split $params.split \
-        $params.revcomp\
-    	-p1 ${reads[0]} \
-    	-p2 ${reads[1]} \
-	-o $params.out_dir
+    """
+    SPLIT_VAL="\$(calculate_split.py \
+    --ref_len $params.ref_len \
+    -p1 ${reads[0]} \
+    -p2 ${reads[1]})";\
+    savage \
+    --ref $params.ref_file \
+    -t $params.num_threads \
+    --split "\$SPLIT_VAL" \
+    $params.revcomp\
+    -p1 ${reads[0]} \
+    -p2 ${reads[1]} \
+    -o $params.out_dir
 	"""
     }
     else if( mode == 'denovo') {
-
-	"""
-        savage \
-        -t $params.num_threads \
-        --split $params.split \
-        $params.revcomp\
-        -p1 ${reads[0]} \
-        -p2 ${reads[1]} \
-        -o $params.out_dir
-        """
+    """
+    SPLIT_VAL="\$(calculate_split.py \
+    --ref_len $params.ref_len \
+    -p1 ${reads[0]} \
+    -p2 ${reads[1]})";\
+    savage \
+    -t $params.num_threads \
+    --split "\$SPLIT_VAL" \
+    $params.revcomp\
+    -p1 ${reads[0]} \
+    -p2 ${reads[1]} \
+    -o $params.out_dir
+    """
     }
     else {
         println "Select proper mode"
     }
-}
-
-workflow.onComplete {
-    println "Pipeline completed at: $workflow.complete"
-    println "Execution status: ${ workflow.success ? 'OK' : 'failed' }"
 }
