@@ -1,15 +1,6 @@
 // run savage given a list of input files or directory
 
-// Args required to run in de-novo mode
-// savage --split patch_num --min_overlap_len M --s singles.fastq --p1 paired1.fastq --p2 paired2.fastq
-// add: -ref to run in reference guided mode
-
-/*
-TODO:
-*/
-
-// ---------------------
-mode = params.mode 
+mode = params.mode
 samples_ch = Channel.fromFilePairs("$params.reads_dir/*_R{1,2}_clean.fastq")
 
 process doAssembly {
@@ -20,7 +11,7 @@ process doAssembly {
     set sampleId, file(reads) from samples_ch
     output:
     file "*"
-    script: 
+    script:
     if( mode == 'ref' ) {
     """
     SPLIT_VAL="\$(calculate_split.py \

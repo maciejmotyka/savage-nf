@@ -8,3 +8,4 @@ work
 split_into.txt
 dag.dot*
 savage_ref_contigs/
+*.swo
