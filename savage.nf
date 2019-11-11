@@ -9,15 +9,17 @@ TODO:
 */
 
 // ---------------------
-
 mode = params.mode 
 samples_ch = Channel.fromFilePairs("$params.reads_dir/*_R{1,2}_clean.fastq")
 
 process doAssembly {
+//    publishDir "./output/$sampleId", mode: 'copy', pattern: "{contigs_stage_c.fasta,contigs_stage_b.fasta}"
+    publishDir "./savage_contigs", pattern: "contigs_stage_c.fasta", saveAs: {"$sampleId" + ".fasta"}
     conda params.savage_env
     input:
     set sampleId, file(reads) from samples_ch
-
+    output:
+    file "*"
     script: 
     if( mode == 'ref' ) {
     """
@@ -26,7 +28,7 @@ process doAssembly {
     -p1 ${reads[0]} \
     -p2 ${reads[1]})";\
     savage \
-	--ref $ref
+    --ref $params.ref_file \
     -t $params.num_threads \
     --split "\$SPLIT_VAL" \
     $params.revcomp\
