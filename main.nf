@@ -1,17 +1,14 @@
-// run savage given a list of input files or directory
-
 mode = params.mode
 samples_ch = Channel.fromFilePairs("$params.reads_dir/*_R{1,2}_clean.fastq")
 
 process doAssembly {
-//    publishDir "./output/$sampleId", mode: 'copy', pattern: "{contigs_stage_c.fasta,contigs_stage_b.fasta}"
     publishDir "./savage_contigs", pattern: "contigs_stage_c.fasta", saveAs: {"$sampleId" + ".fasta"}
     conda params.savage_env
     input:
     set sampleId, file(reads) from samples_ch
     output:
     file "*"
-    script:
+   script:
     if( mode == 'ref' ) {
     """
     SPLIT_VAL="\$(calculate_split.py \
@@ -26,7 +23,7 @@ process doAssembly {
     -p1 ${reads[0]} \
     -p2 ${reads[1]} \
     -o $params.out_dir
-	"""
+    """
     }
     else if( mode == 'denovo') {
     """
