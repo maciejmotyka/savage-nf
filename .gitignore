@@ -5,7 +5,5 @@ work
 .nextflow.log*
 *clean.fastq
 *log.html*
-split_into.txt
 dag.dot*
-savage_ref_contigs/
 *.swo
